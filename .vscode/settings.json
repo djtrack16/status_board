@@ -1,0 +1,6 @@
+{
+  "python.analysis.extraPaths": [
+    "./tests/factories/monitor_",
+    "./app"
+  ]
+}
