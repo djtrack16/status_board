@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import APIRouter, Depends
 from sqlmodel import Session, select
-from app.models.monitor import Monitor
+from app.models.monitor import Monitor, MonitorParams
 from app.models.monitor_check import MonitorCheck
 from app.services import monitor_service
 from app.database import get_session
@@ -17,15 +17,17 @@ def create_monitor(monitor: Monitor, session: Session = Depends(get_session)) ->
   session.refresh(monitor)
   return monitor
 
+@router.patch('/{id}', response_model=Monitor)
+def update_monitor(
+  id: int, monitor_params: MonitorParams, session: Session = Depends(get_session)
+):
+  return monitor_service.update_monitor(id, monitor_params, session)
+
 @router.get('/', response_model=List[Monitor])
 def fetch_monitor(monitor_params: Monitor, session: Session = Depends()) -> List[Monitor]:
   return monitor_service.fetch_monitors(monitor_params, session)
 
-@router.patch(f'{id}', response_model=Monitor)
-def update_monitor(monitor_id: int, session: Session = Depends()):
-  query = select(Monitor).where(Monitor.id == monitor_id)
-
-@router.delete(f'/{id}', response_model=None)
+@router.delete('/{id}', response_model=None)
 def delete_monitor(monitor_id: int, session: Session = Depends()):
   return monitor_service.delete(monitor_id, session)
 

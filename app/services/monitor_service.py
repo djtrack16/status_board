@@ -1,7 +1,7 @@
 from typing import List, cast
 from fastapi import Response
 from app.models.monitor_check import MonitorCheck
-from app.models.monitor import Monitor
+from app.models.monitor import Monitor, MonitorParams
 from sqlmodel import Session, select
 from app.utils.http import fetch_with_retries, raise_404
 from time import perf_counter
@@ -10,6 +10,20 @@ from datetime import datetime
 
 def fetch_monitors(monitor_params: Monitor, session: Session) -> List[Monitor]:
   return []
+
+def update_monitor(monitor_id: int, monitor_params: MonitorParams, session: Session):
+  monitor = session.get(Monitor, monitor_id)
+  if not monitor:
+     raise_404(f"Monitor with id={monitor_id} not found")
+
+  updated_data = monitor_params.model_dump(exclude_unset=True)
+  for field, value in updated_data.items():
+    setattr(monitor, field, value)
+  
+  session.add(monitor)
+  session.commit()
+  session.refresh(monitor)
+  return monitor
 
 def delete(monitor_id: int, session: Session):
   try:

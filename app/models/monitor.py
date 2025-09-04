@@ -1,3 +1,4 @@
+from pydantic import BaseModel, ConfigDict
 from sqlmodel import SQLModel, Field, Relationship
 from datetime import UTC, datetime
 from typing import List, Optional
@@ -19,4 +20,11 @@ class Monitor(SQLModel, table=True):
 	updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 	checks: List["MonitorCheck"] = Relationship(back_populates="monitor") # type: ignore
 
+class MonitorParams(SQLModel):
+	id: Optional[int] = None
+	url: Optional[str] = None
+	is_active: Optional[bool] = None
+	expected_status_code: Optional[int] = None
+	name: Optional[str] = None
 
+	#model_config = ConfigDict(from_attributes=True)

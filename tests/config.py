@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.database import get_session  # your dependency
-from tests.factories.monitor_factory import MonitorFactory, MonitorCheckFactory
+from tests.factories.monitor_factory import MonitorFactory, MonitorCheckFactory, MonitorParamsFactory
 
 # Use in-memory SQLite with StaticPool so all sessions share the same connection
 TEST_DATABASE_URL = "sqlite:///:memory:"
@@ -38,6 +38,7 @@ def client():
     yield c
 
 # Test DB SQLite
+
 @pytest.fixture
 def session_fixture(engine_fixture):
   
@@ -47,8 +48,11 @@ def session_fixture(engine_fixture):
     yield session
 
   # teardown
-  session.close()
+  #session.close()
   SQLModel.metadata.drop_all(engine_fixture)
+  session.commit()
+  session.close()
+
 
 @pytest.fixture(scope="function")
 def engine_fixture():
@@ -67,3 +71,9 @@ def monitor_check_factory(session_fixture):
   # Bind factory to the session for this test run
   MonitorCheckFactory._meta.sqlalchemy_session =  session_fixture# type: ignore
   return MonitorCheckFactory
+
+@pytest.fixture
+def monitor_params_factory(session_fixture):
+  # Bind factory to the session for this test run
+  MonitorParamsFactory._meta.sqlalchemy_session =  session_fixture# type: ignore
+  return MonitorParamsFactory

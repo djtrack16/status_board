@@ -1,7 +1,7 @@
 import factory
 from factory.declarations import Sequence, SubFactory, Iterator
 from sqlmodel import Session
-from app.models.monitor import Monitor
+from app.models.monitor import Monitor, MonitorParams
 from app.models.monitor_check import MonitorCheck
 from factory.faker import Faker
 
@@ -16,6 +16,18 @@ class MonitorFactory(factory.alchemy.SQLAlchemyModelFactory):
   url = Faker("url")
   name = Faker("name")
   is_active = True
+
+class MonitorParamsFactory(factory.alchemy.SQLAlchemyModelFactory):
+  class Meta:
+    model = MonitorParams
+    sqlalchemy_session: None
+    sqlalchemy_session_persistence = "flush"
+
+  #id = Sequence(lambda n: n + 1)
+  url = Faker("url")
+  name = Faker("name")
+  is_active = True
+  expected_status_code = 200
 
 class MonitorCheckFactory(factory.alchemy.SQLAlchemyModelFactory):
   class Meta:

@@ -11,6 +11,7 @@ from tests.config import(
   create_engine,
   client,
   monitor_factory,
+  monitor_params_factory,
   monitor_check_factory,
   session_fixture,
   engine_fixture
@@ -31,12 +32,38 @@ def test_create_monitor(client, session_fixture):
   assert data["name"] == "Example"
   assert "id" in data
 
-  # confirm is stored in DB
-
   monitor = session_fixture.get(Monitor, data["id"])
   assert monitor is not None
   assert monitor.url == payload["url"]
   assert monitor.name == payload["name"]
+
+def test_update_monitor(client, monitor_factory, session_fixture):
+  payload = {
+    "url": "https://example.com",
+    "is_active": True,
+    "expected_status_code": 500,
+    "name": "fake_name"
+  }
+
+  mc = monitor_factory.create(url="gmail.com",is_active=False)
+  session_fixture.commit()
+
+  response = client.patch(
+    f'/monitors/{mc.id}',
+    json=payload
+  )
+  data = response.json()
+
+  session_fixture.refresh(mc)
+
+  assert response.status_code == 200
+  assert mc.id == data['id']
+
+  m = session_fixture.get(Monitor, data['id'])
+  assert m is not None
+  assert m.url == payload['url']
+  assert m.name == payload['name']
+  assert m.expected_status_code == payload['expected_status_code']
 
 
 def test_create_monitor_with_factory(monitor_factory):
@@ -53,11 +80,10 @@ def test_monitor_check_factory_creates_record(monitor_check_factory):
   assert mc.status_code == 204
   assert mc.success is True
   assert mc.response_time_ms == 560
-'''
+
 def test_monitor_factory_creates_record(monitor_factory, session_fixture):
   monitor = monitor_factory.create(url="https://google.com")
 
   db_monitor = session_fixture.get(type(monitor), monitor.id)
   assert db_monitor is not None
   assert db_monitor.url == "https://google.com"
-'''
