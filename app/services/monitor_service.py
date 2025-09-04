@@ -27,10 +27,9 @@ def update_monitor(monitor_id: int, monitor_params: MonitorParams, session: Sess
 
 def delete(monitor_id: int, session: Session):
   try:
-    query = select(Monitor).where(Monitor.id == monitor_id)
-    monitor = session.exec(query).one_or_none()
+    monitor = session.get(Monitor, monitor_id)
     if not monitor:
-      raise_404(f"Book with id={monitor_id} not found")
+      raise_404(f"Monitor with id={monitor_id} not found")
     session.delete(monitor)
     session.commit()
     return Response(status_code=204)

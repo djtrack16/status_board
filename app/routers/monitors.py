@@ -28,8 +28,8 @@ def fetch_monitor(monitor_params: Monitor, session: Session = Depends()) -> List
   return monitor_service.fetch_monitors(monitor_params, session)
 
 @router.delete('/{id}', response_model=None)
-def delete_monitor(monitor_id: int, session: Session = Depends()):
-  return monitor_service.delete(monitor_id, session)
+def delete_monitor(id: int, session: Session = Depends(get_session)):
+  return monitor_service.delete(id, session)
 
 @router.get('/{monitor_id}/history', response_model=List[MonitorCheck]) # should id be monitor_id?
 def monitor_history(

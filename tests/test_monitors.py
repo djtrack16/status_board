@@ -65,6 +65,19 @@ def test_update_monitor(client, monitor_factory, session_fixture):
   assert m.name == payload['name']
   assert m.expected_status_code == payload['expected_status_code']
 
+def test_delete_monitor(client, session_fixture, monitor_factory):
+  mf = monitor_factory.create(url="gmail.com")
+  session_fixture.commit()
+  assert session_fixture.get(Monitor, mf.id) is not None
+  deleted_id = mf.id
+
+  response = client.delete(f"/monitors/{mf.id}")
+  assert response.status_code == 204
+  session_fixture.expire_all() # expire cached objects so we always query fresh from the db
+  deleted_monitor = session_fixture.get(Monitor, deleted_id)
+
+  assert deleted_monitor is None
+
 
 def test_create_monitor_with_factory(monitor_factory):
   fake_url = "https://example.com",
