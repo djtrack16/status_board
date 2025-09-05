@@ -1,10 +1,20 @@
-from pydantic import ConfigDict, BaseModel
-from sqlmodel import Field
 from typing import Optional
+from sqlmodel import SQLModel, Field
+from pydantic import field_validator
 
-class MonitorParams(BaseModel):
-	id: Optional[int] = Field(default=None, primary_key=True)
-	url: str
-	is_active: bool = Field(default=True)
-	expected_status_code: int = 200
-	name: Optional[str] = None
+
+class MonitorQueryParams(SQLModel):
+	is_active: Optional[bool] = None
+
+	@field_validator("is_active", mode="before")
+	@classmethod
+	def normalize_bool(cls, v):
+		if isinstance(v, bool):
+			return v
+		if isinstance(v, str):
+			v_lower = v.lower()
+			if v_lower in {"true", "1", "yes", "on"}:
+				return True
+			if v_lower in {"false", "0", "no", "off"}:
+				return False
+		return v

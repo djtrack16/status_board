@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 from sqlmodel import SQLModel, Field, Relationship
 from datetime import UTC, datetime
 from typing import List, Optional
@@ -26,5 +26,26 @@ class MonitorParams(SQLModel):
 	is_active: Optional[bool] = None
 	expected_status_code: Optional[int] = None
 	name: Optional[str] = None
+	last_status_code: Optional[int] = None
 
 	#model_config = ConfigDict(from_attributes=True)
+
+class MonitorQueryParams(SQLModel):
+	is_active: Optional[bool] = None
+	url: Optional[str] = None
+	expected_status_code: Optional[int] = None
+	name: Optional[str] = None
+	last_status_code: Optional[int] = None
+
+	@field_validator("is_active", mode="before")
+	@classmethod
+	def normalize_bool(cls, v):
+		if isinstance(v, bool):
+			return v
+		if isinstance(v, str):
+			v_lower = v.lower()
+			if v_lower in {"true", "1", "yes", "on"}:
+				return True
+			if v_lower in {"false", "0", "no", "off"}:
+				return False
+		return v

@@ -1,20 +1,35 @@
 from typing import List, cast
 from fastapi import Response
+from sqlalchemy import func
 from app.models.monitor_check import MonitorCheck
-from app.models.monitor import Monitor, MonitorParams
+from app.models.monitor import Monitor, MonitorParams, MonitorQueryParams
 from sqlmodel import Session, select
 from app.utils.http import fetch_with_retries, raise_404
 from time import perf_counter
 from sqlalchemy.sql.elements import ColumnElement
 from datetime import datetime
 
-def fetch_monitors(monitor_params: Monitor, session: Session) -> List[Monitor]:
-  return []
+def fetch_monitors(query_params: MonitorQueryParams, session: Session) -> List[Monitor]:
+  query = select(Monitor)
+
+  if query_params.url:
+    query = query.where(func.lower(Monitor.url).contains(query_params.url.lower()))
+  if query_params.name:
+    query = query.where(Monitor.name.ilike(f"%{query_params.name}%")) # type: ignore
+
+  if query_params.is_active is not None:
+    query = query.where(Monitor.is_active == query_params.is_active)
+
+  if query_params.last_status_code:
+    query = query.where(Monitor.last_status_code == query_params.last_status_code)
+
+  monitors = list(session.exec(query).all())
+  return monitors
 
 def update_monitor(monitor_id: int, monitor_params: MonitorParams, session: Session):
   monitor = session.get(Monitor, monitor_id)
   if not monitor:
-     raise_404(f"Monitor with id={monitor_id} not found")
+    raise_404(f"Monitor with id={monitor_id} not found")
 
   updated_data = monitor_params.model_dump(exclude_unset=True)
   for field, value in updated_data.items():

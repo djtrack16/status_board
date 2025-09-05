@@ -79,6 +79,43 @@ def test_delete_monitor(client, session_fixture, monitor_factory):
   assert deleted_monitor is None
 
 
+def test_get_monitors_by_url(client, monitor_factory):
+  url = "www.google.com"
+  mf = monitor_factory.create(url=url)
+  response = client.get(f"/monitors/?url={url}")
+
+  assert response.status_code == 200
+  data = response.json()
+  assert len(data) == 1
+  assert mf.url == data[0]['url']
+
+def test_get_monitors_by_is_active(client, monitor_factory):
+  #is_active = false
+  monitor_factory.create(is_active=False)
+  monitor_factory.create(is_active=True)
+  response = client.get(f"/monitors/?is_active=False")
+
+  assert response.status_code == 200
+  data = response.json()
+  assert len(data) == 1
+  for mf in data:
+    assert mf['is_active'] == False
+
+def test_get_monitors_by_last_status_code(client, monitor_factory):
+  last_status_code = 500
+  monitor_factory.create(last_status_code=last_status_code)
+  monitor_factory.create(last_status_code=last_status_code)
+  monitor_factory.create(last_status_code=404)
+  response = client.get(f"/monitors/?last_status_code={last_status_code}")
+
+  assert response.status_code == 200
+  data = response.json()
+  assert len(data) == 2
+  #assert 500 == data[0]['url']
+  for mf in data:
+    assert 500 == mf['last_status_code']
+
+
 def test_create_monitor_with_factory(monitor_factory):
   fake_url = "https://example.com",
   fake_name = "Example"
