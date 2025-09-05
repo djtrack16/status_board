@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import Engine
@@ -111,9 +112,34 @@ def test_get_monitors_by_last_status_code(client, monitor_factory):
   assert response.status_code == 200
   data = response.json()
   assert len(data) == 2
-  #assert 500 == data[0]['url']
   for mf in data:
     assert 500 == mf['last_status_code']
+
+def test_get_monitor_history_not_found_with_factories(client, monitor_factory):
+  monitor_factory.create(url="123")
+  response = client.get("/monitors/999/history?limit=2")
+  assert response.status_code == 404
+  data = response.json()
+  assert "Monitor not found" in data["detail"]
+
+def test_get_monitor_history_with_factories(client, session_fixture, monitor_factory, monitor_check_factory):
+  # Create a monitor with factory
+  m = monitor_factory.create()
+
+  # Create 3 monitor checks in reverse chronological order
+  for i in range(3):
+    monitor_check_factory.create(
+      monitor= m,
+      checked_at= datetime.now(timezone.utc) - timedelta(minutes=i),
+    )
+
+  # Call API with limit=2
+  response = client.get(f"/monitors/{m.id}/history?limit=2")
+  assert response.status_code == 200
+  data = response.json()
+
+  assert len(data) == 2
+  assert data[0]["checked_at"] > data[1]["checked_at"]
 
 
 def test_create_monitor_with_factory(monitor_factory):

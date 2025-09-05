@@ -94,7 +94,7 @@ def get_monitor_history(session: Session, monitor_id: int, limit: int) -> List[M
   query = (
     select(MonitorCheck)
     .where(MonitorCheck.monitor_id == monitor_id)
-    .order_by(mc_timestamp.desc)
+    .order_by(mc_timestamp.desc())
     .limit(limit)
   )
   

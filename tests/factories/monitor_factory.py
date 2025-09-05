@@ -32,8 +32,8 @@ class MonitorParamsFactory(factory.alchemy.SQLAlchemyModelFactory):
 class MonitorCheckFactory(factory.alchemy.SQLAlchemyModelFactory):
   class Meta:
     model = MonitorCheck
-    sqlalchemy_session = None
-    sqlalchemy_session_persistence = "flush"
+    sqlalchemy_session = None#SessionLocal()
+    sqlalchemy_session_persistence = "commit"
 
   monitor = MonitorFactory.build(name="name", url="url")
   status_code = Iterator([200, 404, 500])

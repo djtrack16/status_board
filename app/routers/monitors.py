@@ -34,7 +34,7 @@ def fetch_monitor(
 def delete_monitor(id: int, session: Session = Depends(get_session)):
   return monitor_service.delete(id, session)
 
-@router.get('/{id}/history', response_model=List[MonitorCheck]) # should id be monitor_id?
+@router.get('/{id}/history', response_model=List[MonitorCheck])
 def monitor_history(
   id: int,
   limit: int = DEFAULT_MONITOR_HISTORY_LIMIT,
@@ -42,9 +42,9 @@ def monitor_history(
 ) -> List[MonitorCheck]:
   return monitor_service.get_monitor_history(session, id, limit)
 
-@router.get("/{monitor_id}/summary")
+@router.get("/{id}/summary")
 def get_monitor_summary(
-  monitor_id: int,
+  id: int,
   session: Session = Depends(get_session),
 ) -> dict[str, float]:
-  return monitor_service.get_monitor_summary(session, monitor_id)
+  return monitor_service.get_monitor_summary(session, id)
