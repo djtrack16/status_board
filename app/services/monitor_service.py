@@ -66,7 +66,7 @@ async def check_monitor(session: Session, monitor: Monitor):
   Update monitor status in DB.
   """
   start_time = perf_counter()
-  query = select(MonitorCheck).where(Monitor.id == monitor.id)
+  query = select(MonitorCheck).where(MonitorCheck.monitor_id == monitor.id)
   check = session.exec(query).one()
   if not check:
     raise_404(f"MonitorCheck with monitor_id={monitor.id} not found")

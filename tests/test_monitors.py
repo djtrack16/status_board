@@ -133,13 +133,48 @@ def test_get_monitor_history_with_factories(client, session_fixture, monitor_fac
       checked_at= datetime.now(timezone.utc) - timedelta(minutes=i),
     )
 
-  # Call API with limit=2
   response = client.get(f"/monitors/{m.id}/history?limit=2")
   assert response.status_code == 200
   data = response.json()
 
   assert len(data) == 2
   assert data[0]["checked_at"] > data[1]["checked_at"]
+
+def test_get_monitor_summary_happy_path(client, session_fixture, monitor_factory, monitor_check_factory):
+  monitor = monitor_factory.create()
+
+  # 2 successes, 1 failure
+  monitor_check_factory.create(monitor=monitor, success=True, response_time_ms=100, checked_at=datetime.now(timezone.utc))
+  monitor_check_factory.create(monitor=monitor, success=True, response_time_ms=200, checked_at=datetime.now(timezone.utc) - timedelta(minutes=1))
+  monitor_check_factory.create(monitor=monitor, success=False, response_time_ms=150, checked_at=datetime.now(timezone.utc) - timedelta(minutes=2))
+
+  session_fixture.commit()
+
+  response = client.get(f"/monitors/{monitor.id}/summary")
+  assert response.status_code == 200
+  data = response.json()
+
+  assert data["total_checks"] == 3
+  assert data["success_checks"] == 2
+  assert data["failed_checks"] == 1
+  assert data["success_rate"] == pytest.approx(66.6666, 0.1)  # ~66.67%
+  assert data["average_response_time_ms"] == pytest.approx((100+200+150)/3)
+
+def test_get_monitor_summary_no_checks(client, session_fixture, monitor_factory):
+  # Create a monitor with no checks
+  monitor = monitor_factory.create()
+  session_fixture.commit()
+
+  # Call the API
+  response = client.get(f"/monitors/{monitor.id}/summary")
+  assert response.status_code == 200
+  data = response.json()
+
+  assert data["total_checks"] == 0
+  assert data["success_checks"] == 0
+  assert data["failed_checks"] == 0
+  assert data["success_rate"] == 0.0
+  assert data["average_response_time_ms"] == 0.0
 
 
 def test_create_monitor_with_factory(monitor_factory):

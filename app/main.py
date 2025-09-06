@@ -15,7 +15,6 @@ from app.services.monitor_service import check_all_monitors
 async def lifespan(app: FastAPI):
   # Startup: create DB tables
   SQLModel.metadata.create_all(engine)
-  #scheduler.schedule_jobs()
 
   # Startup: launch background loop
   task = asyncio.create_task(monitor_loop())
